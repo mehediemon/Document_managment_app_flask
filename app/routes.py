@@ -5,6 +5,13 @@ from app.forms import RegistrationForm, LoginForm, FolderForm, UploadForm
 from app.models import User, Folder, File
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.utils import secure_filename
+from datetime import datetime
+
+@app.route("/", methods=['GET', 'POST'])
+def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    return redirect(url_for('login'))
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -58,12 +65,11 @@ def home():
     
     return render_template('home.html', title='Home', folders=folders, files=files, form=form)
 
-
-@app.route("/folder/<int:folder_id>", methods=['GET', 'POST'])
+@app.route("/<username>/folder/<int:folder_id>", methods=['GET', 'POST'])
 @login_required
-def folder(folder_id):
+def folder(username, folder_id):
     folder = Folder.query.get_or_404(folder_id)
-    if folder.user_id != current_user.id:
+    if folder.user_id != current_user.id or current_user.username != username:
         abort(403)
     
     # Handle creating new subfolders
@@ -75,18 +81,20 @@ def folder(folder_id):
         new_folder = Folder(name=form.name.data, user_id=current_user.id, path=folder_path, parent_id=folder.id)
         db.session.add(new_folder)
         db.session.commit()
-        return redirect(url_for('folder', folder_id=folder.id))
+        return redirect(url_for('folder', username=username, folder_id=folder.id))
     
     # Handle file uploads
     if upload_form.validate_on_submit():
         file = upload_form.file.data
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(folder.path, filename)
+        original_filename = secure_filename(file.filename)
+        file_extension = os.path.splitext(original_filename)[1]  # Extract the original file extension
+        new_filename = f"{upload_form.new_name.data}{file_extension}"  # Combine new name with original extension
+        file_path = os.path.join(folder.path, new_filename)
         file.save(file_path)
-        new_file = File(name=filename, folder_id=folder.id, path=file_path)
+        new_file = File(name=new_filename, folder_id=folder.id, path=file_path)
         db.session.add(new_file)
         db.session.commit()
-        return redirect(url_for('folder', folder_id=folder.id))
+        return redirect(url_for('folder', username=username, folder_id=folder.id))
     
     # Fetch subfolders and files
     subfolders = Folder.query.filter_by(parent_id=folder.id).all()
@@ -100,7 +108,5 @@ def folder(folder_id):
 @app.route("/uploads/<path:filename>")
 @login_required
 def download_file(filename):
-    # Assuming files are stored in the 'uploads' directory
     directory = app.config['UPLOAD_FOLDER']
     return send_from_directory(directory, filename)
-

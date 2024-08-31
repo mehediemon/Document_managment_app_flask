@@ -17,7 +17,7 @@
     <ul class="list-group">
         {% for folder in folders %}
             <li class="list-group-item">
-                <a href="{{ url_for('folder', folder_id=folder.id) }}">{{ folder.name }}</a>
+                <a href="{{ url_for('folder', username=current_user.username, folder_id=folder.id) }}">{{ folder.name }}</a>
             </li>
         {% endfor %}
     </ul>
