@@ -25,7 +25,7 @@ ENV/
 nginx.conf
 
 # Uploads and database
-/uploads/
+/app/uploads/
 Database/
 
 # System files

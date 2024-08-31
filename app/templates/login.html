@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% block title %}Login{% endblock %}
 {% block content %}
+<div class="jumbotron">
     <h2>Login</h2>
     <form method="POST" action="">
         {{ form.hidden_tag() }}
@@ -19,4 +20,5 @@
             {{ form.submit(class="btn btn-primary") }}
         </div>
     </form>
+</div>
 {% endblock %}
