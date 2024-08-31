@@ -1,11 +1,12 @@
 import os
-from flask import render_template, url_for, flash, redirect, request, abort, send_from_directory
+from flask import render_template, url_for, flash, redirect, request, abort, send_from_directory, current_app as app
 from app import app, db, bcrypt
 from app.forms import RegistrationForm, LoginForm, FolderForm, UploadForm
 from app.models import User, Folder, File
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.utils import secure_filename
 from datetime import datetime
+
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
@@ -83,18 +84,21 @@ def folder(username, folder_id):
         db.session.commit()
         return redirect(url_for('folder', username=username, folder_id=folder.id))
     
-    # Handle file uploads
     if upload_form.validate_on_submit():
-        file = upload_form.file.data
-        original_filename = secure_filename(file.filename)
-        file_extension = os.path.splitext(original_filename)[1]  # Extract the original file extension
-        new_filename = f"{upload_form.new_name.data}{file_extension}"  # Combine new name with original extension
-        file_path = os.path.join(folder.path, new_filename)
-        file.save(file_path)
-        new_file = File(name=new_filename, folder_id=folder.id, path=file_path)
-        db.session.add(new_file)
-        db.session.commit()
-        return redirect(url_for('folder', username=username, folder_id=folder.id))
+          file = upload_form.file.data
+          original_filename = secure_filename(file.filename)
+          file_extension = os.path.splitext(original_filename)[1]  # Extract the original file extension
+          new_filename = f"{upload_form.new_name.data}{file_extension}"  # Combine new name with original extension
+          file_path = os.path.join(folder.path, new_filename)  # Full path where file is saved
+
+          # Save file and store relative path
+          file.save(file_path)
+          relative_path = os.path.relpath(file_path, app.config['UPLOAD_FOLDER'])  # Store path relative to UPLOAD_FOLDER
+          new_file = File(name=new_filename, folder_id=folder.id, path=relative_path)
+          db.session.add(new_file)
+          db.session.commit()
+          return redirect(url_for('folder', username=username, folder_id=folder.id))
+
     
     # Fetch subfolders and files
     subfolders = Folder.query.filter_by(parent_id=folder.id).all()
@@ -105,8 +109,33 @@ def folder(username, folder_id):
 
     return render_template('folder.html', title=folder.name, folder=folder, subfolders=subfolders, files=files, form=form, upload_form=upload_form, parent_folder=parent_folder)
 
+@app.route("/search", methods=['GET'])
+@login_required
+def search():
+    query = request.args.get('query')
+    if query:
+        # Filter files by checking the folder's user_id
+        files = db.session.query(File).join(Folder).filter(
+            File.name.ilike(f'%{query}%'),
+            Folder.user_id == current_user.id
+        ).all()
+    else:
+        files = []
+
+    return render_template('search_results.html', title='Search Results', files=files, query=query)
+
+
 @app.route("/uploads/<path:filename>")
 @login_required
 def download_file(filename):
     directory = app.config['UPLOAD_FOLDER']
+    file_path = os.path.join(directory, filename)
+    
+    print(f"Directory: {directory}")
+    print(f"Requested file: {filename}")
+    print(f"Full file path: {file_path}")
+    print(f"File exists: {os.path.isfile(file_path)}")
+
+    if not os.path.isfile(file_path):
+        abort(404)  # File not found
     return send_from_directory(directory, filename)

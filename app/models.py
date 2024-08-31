@@ -22,8 +22,10 @@ class Folder(db.Model):
     name = db.Column(db.String(100), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     parent_id = db.Column(db.Integer, db.ForeignKey('folder.id'), nullable=True)
-    parent = db.relationship('Folder', remote_side=[id])
     path = db.Column(db.String(200), nullable=False)
+
+    # Define relationship to parent folder
+    parent = db.relationship('Folder', remote_side=[id])
 
     def __repr__(self):
         return f"Folder('{self.name}', '{self.path}')"
@@ -34,6 +36,9 @@ class File(db.Model):
     folder_id = db.Column(db.Integer, db.ForeignKey('folder.id'), nullable=False)
     path = db.Column(db.String(200), nullable=False)
     date_uploaded = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    # Define relationship to Folder
+    folder = db.relationship('Folder', backref='files', lazy=True)
 
     def __repr__(self):
         return f"File('{self.name}', '{self.path}', '{self.date_uploaded}')"
