@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+
+{% block title %}Folder: {{ folder.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Folder Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            {% if parent_folder %}
+            <a href="{{ url_for('folder', folder_id=parent_folder.id) }}" class="btn btn-secondary">Go to Parent
+                Folder</a>
+            {% else %}
+            <a href="{{ url_for('home') }}" class="btn btn-secondary">Go to Home</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-4 p-1">
+        <!-- Folder Creation Form -->
+        <div class="col-md-6  p-3 card">
+            <div>
+                <h2>Create New Folder</h2>
+                <form method="POST" action="{{ url_for('folder', folder_id=folder.id) }}">
+                    {{ form.hidden_tag() }}
+                    <div class="form-group">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{ form.submit.label }}</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- File Upload Form -->
+        <div class="col-md-6  p-3 card ">
+            <div >
+                <h2>Upload File</h2>
+                <form method="POST" action="{{ url_for('folder', folder_id=folder.id) }}" enctype="multipart/form-data">
+                    {{ upload_form.hidden_tag() }}
+                    <div class="form-group">
+                        {{ upload_form.file.label(class="form-label") }}
+                        {{ upload_form.file(class="form-control-file") }}
+                    </div>
+                    <button type="submit" class="btn btn-success">{{ upload_form.submit.label }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center mt-4 p-1">
+        <!-- Subfolders List -->
+        <div class="card col-md-6">
+            {% if subfolders %}
+            <div class="card-body">
+                <h2>Subfolders</h2>
+                <ul class="list-group">
+                    {% for subfolder in subfolders %}
+                    <li class="list-group-item">
+                        <a href="{{ url_for('folder', folder_id=subfolder.id) }}">{{ subfolder.name }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+
+        <div class="card col-md-6">
+            <!-- Files List -->
+            {% if files %}
+            <div class="card-body">
+                <h1>Folder: {{ folder.name }}</h1>
+                <ul class="list-group">
+                    {% for file in files %}
+                    <li class="list-group-item">
+                        <a href="{{ url_for('download_file', filename=file.path) }}">{{ file.name }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
