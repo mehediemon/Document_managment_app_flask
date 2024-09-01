@@ -31,14 +31,11 @@
 
 {% block content %}
 
-
-<div class="container-fluid mt-4">
-
-
-    <div class="row  mt-4 p-1">
+<div class="container-fluid ">
+    <div class="row ">
         <!-- Folder Creation Form -->
-        <div class="col-md-6 p-3 card">
-            <div>
+        <div class="col-md-3 p-3 card">
+            <div class="card p-3">
                 <h2>Create New Folder</h2>
                 <form method="POST"
                     action="{{ url_for('folder', username=current_user.username, folder_id=folder.id) }}">
@@ -48,15 +45,11 @@
                         {{ form.name(class="form-control") }}
                     </div>
                     <div class="form-group input-group-lg mt-2">
-                    <button type="submit" class="btn btn-primary">{{ form.submit.label }}</button>
-                </div>
+                        <button type="submit" class="btn btn-primary">{{ form.submit.label }}</button>
+                    </div>
                 </form>
             </div>
-        </div>
-
-        <!-- File Upload Form -->
-        <div class="col-md-6 p-3 card">
-            <div>
+            <div class="card p-3">
                 <h2>Upload File</h2>
                 <form method="POST"
                     action="{{ url_for('folder', username=current_user.username, folder_id=folder.id) }}"
@@ -71,17 +64,19 @@
                         {{ upload_form.new_name(class="form-control") }}
                     </div>
                     <div class="form-group input-group-lg mt-2">
-                    <button type="submit" class="btn btn-success">{{ upload_form.submit.label }}</button>
-                </div>
+                        <button type="submit" class="btn btn-success">{{ upload_form.submit.label }}</button>
+                    </div>
                 </form>
             </div>
         </div>
-    </div>
 
-    <div class="row justify-content-center mt-4">
-        {% if subfolders %}
-        <!-- Subfolders List -->
-        <div class="card col-md-6">
+        <!-- File Upload Form -->
+
+
+        <div class="col-md-3 p-3 card">
+            {% if subfolders %}
+            <!-- Subfolders List -->
+
 
             <div class="card-body">
                 <h2>Subfolders</h2>
@@ -93,32 +88,34 @@
                     </li>
                     {% endfor %}
                 </ul>
+
+
             </div>
+            {% endif %}
+        </div>
+        <div class="col-md-6 p-3 card">
+            {% if files %}
+
+                <!-- Files List -->
+
+                
+                    <h1>Folder: {{ folder.name }}</h1>
+                    <ul class="list-group">
+                        {% for file in files %}
+                        {% if file.name.endswith('.pdf') or file.name.endswith('.jpg') or file.name.endswith('.png') %}
+                        <!-- Open PDF files in a new tab -->
+                        <a href="{{ url_for('download_file', filename=file.path) }}" target="_blank">{{ file.name }}</a>
+                        {% else %}
+                        <!-- Directly download other files -->
+                        <a href="{{ url_for('download_file', filename=file.path) }}" download>{{ file.name }}</a>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+            
+
+            {% endif %}
 
         </div>
-        {% endif %}
-
-        {% if files %}
-        <div class="card col-md-6">
-            <!-- Files List -->
-
-            <div class="card-body">
-                <h1>Folder: {{ folder.name }}</h1>
-                <ul class="list-group">
-                    {% for file in files %}
-                    {% if file.name.endswith('.pdf') or file.name.endswith('.jpg') or file.name.endswith('.png') %}
-                    <!-- Open PDF files in a new tab -->
-                    <a href="{{ url_for('download_file', filename=file.path) }}" target="_blank">{{ file.name }}</a>
-                    {% else %}
-                    <!-- Directly download other files -->
-                    <a href="{{ url_for('download_file', filename=file.path) }}" download>{{ file.name }}</a>
-                    {% endif %}
-                    {% endfor %}
-                </ul>
-            </div>
-
-        </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
