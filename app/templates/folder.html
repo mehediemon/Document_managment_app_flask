@@ -2,30 +2,30 @@
 
 {% block title %}Folder: {{ folder.name }}{% endblock %}
 {% block banner %}
-<div class="container col-xl-10 col-xxl-8 px-2 py-5">
+<div class="container col-xl-9 col-xxl-9 px-2 py-5">
     <div class="row align-items-center g-lg-5 py-5 text-center">
         <div class="col text-center ">
-            <h1 class="display-4 fw-bold lh-1 mb-2 text-center">
-                <img src="{{ url_for('static', filename='img/img.png') }}" alt="Brand Logo" style="height: 100px;">
+            <h5 class="display-5 fw-bold lh-1 mb-2 text-center">
+                <img src="{{ url_for('static', filename='img/img.png') }}" alt="Brand Logo" style="height: 70px;">
                 Create Folder or Upload Documents
-            </h1>
+            </h5>
 
         </div>
 
     </div>
-    <div class="d-flex justify-content-center align-items-center mb-4">
+    <div class="d-flex justify-content-center align-items-center mb-2">
         <div>
             {% if parent_folder %}
             <a href="{{ url_for('folder', username=current_user.username, folder_id=parent_folder.id) }}"
-                class="btn btn-secondary">Go to Parent Folder</a>
+                class="btn btn-outline-success rounded-0">Go to Parent Folder</a>
             {% else %}
-            <a href="{{ url_for('home') }}" class="btn btn-secondary">Go to Home</a>
+            <a href="{{ url_for('home') }}" class="btn btn-success rounded-0">Go to Home</a>
             {% endif %}
         </div>
     </div>
 
 </div>
-<hr class="my-2">
+<hr class="my-1">
 {% endblock %}
 
 
@@ -34,22 +34,9 @@
 <div class="container-fluid ">
     <div class="row ">
         <!-- Folder Creation Form -->
-        <div class="col-md-3 p-3 card">
-            <div class="card p-3">
-                <h2>Create New Folder</h2>
-                <form method="POST"
-                    action="{{ url_for('folder', username=current_user.username, folder_id=folder.id) }}">
-                    {{ form.hidden_tag() }}
-                    <div class="form-group input-group-lg">
-                        {{ form.name.label(class="form-label") }}
-                        {{ form.name(class="form-control") }}
-                    </div>
-                    <div class="form-group input-group-lg mt-2">
-                        <button type="submit" class="btn btn-primary">{{ form.submit.label }}</button>
-                    </div>
-                </form>
-            </div>
-            <div class="card p-3">
+                 <!-- File Upload Form -->
+        <div class="col-md-3 p-3 ">
+            <div class="card p-3 mb-1 border-success rounded-0">
                 <h2>Upload File</h2>
                 <form method="POST"
                     action="{{ url_for('folder', username=current_user.username, folder_id=folder.id) }}"
@@ -57,65 +44,91 @@
                     {{ upload_form.hidden_tag() }}
                     <div class="form-group input-group-lg">
                         {{ upload_form.file.label(class="form-label") }}
-                        {{ upload_form.file(class="form-control-file") }}
+                        {{ upload_form.file(class="form-control-file rounded-0") }}
                     </div>
                     <div class="form-group input-group-lg">
                         {{ upload_form.new_name.label(class="form-label") }}
-                        {{ upload_form.new_name(class="form-control") }}
+                        {{ upload_form.new_name(class="form-control rounded-0") }}
                     </div>
                     <div class="form-group input-group-lg mt-2">
-                        <button type="submit" class="btn btn-success">{{ upload_form.submit.label }}</button>
+                        <button type="submit" class="btn btn-success rounded-0">{{ upload_form.submit.label }}</button>
                     </div>
                 </form>
             </div>
-        </div>
-
-        <!-- File Upload Form -->
-
-
-        <div class="col-md-3 p-3 card">
-            {% if subfolders %}
-            <!-- Subfolders List -->
-
-
-            <div class="card-body">
-                <h2>Subfolders</h2>
-                <ul class="list-group">
-                    {% for subfolder in subfolders %}
-                    <li class="list-group-item">
-                        <a href="{{ url_for('folder', username=current_user.username, folder_id=subfolder.id) }}">{{
-                            subfolder.name }}</a>
-                    </li>
-                    {% endfor %}
-                </ul>
-
-
+            <div class="card p-3 border-success rounded-0">
+                <h2>Create New Folder</h2>
+                <form method="POST"
+                    action="{{ url_for('folder', username=current_user.username, folder_id=folder.id) }}">
+                    {{ form.hidden_tag() }}
+                    <div class="form-group input-group-lg">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control rounded-0") }}
+                    </div>
+                    <div class="form-group input-group-lg mt-2">
+                        <button type="submit" class="btn btn-primary rounded-0">{{ form.submit.label }}</button>
+                    </div>
+                </form>
             </div>
-            {% endif %}
+
         </div>
-        <div class="col-md-6 p-3 card">
-            {% if files %}
 
+
+
+        <div class="col-md-2 p-3  ">
+            <!-- Subfolders List -->
+            <div class="card border-success rounded-0" style=" overflow-y: auto;">
+                <div class="card-body" style="height: 470px; overflow-y: auto;">
+                    {% if subfolders %}
+                    <h2>Subfolders</h2>
+                    <ul class="list-group">
+                        {% for subfolder in subfolders %}
+                        <li class="list-group-item rounded-0">
+                            <a href="{{ url_for('folder', username=current_user.username, folder_id=subfolder.id) }}"><svg
+                                    xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-folder" viewBox="0 0 16 16">
+                                    <path
+                                        d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a2 2 0 0 1 .342-1.31zM2.19 4a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91h10.348a1 1 0 0 0 .995-.91l.637-7A1 1 0 0 0 13.81 4zm4.69-1.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981l.006.139q.323-.119.684-.12h5.396z" />
+                                </svg> {{ subfolder.name }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p>Empty no subfolders</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7 p-3 ">
+            <div class="card border-success rounded-0">
                 <!-- Files List -->
+                <div class="card-body" style="height: 470px; overflow-y: auto;">
+                    {% if files %}
 
-                
                     <h1>Folder: {{ folder.name }}</h1>
                     <ul class="list-group">
                         {% for file in files %}
                         {% if file.name.endswith('.pdf') or file.name.endswith('.jpg') or file.name.endswith('.png') %}
-                        <!-- Open PDF files in a new tab -->
-                        <a href="{{ url_for('download_file', filename=file.path) }}" target="_blank">{{ file.name }}</a>
+                        <li class="list-group-item rounded-0">
+                            <!-- Open PDF files in a new tab -->
+                            <a href="{{ url_for('download_file', filename=file.path) }}" target="_blank">{{ file.name
+                                }}</a>
+                        </li>
                         {% else %}
-                        <!-- Directly download other files -->
-                        <a href="{{ url_for('download_file', filename=file.path) }}" download>{{ file.name }}</a>
+                        <li class="list-group-item">
+                            <!-- Directly download other files -->
+                            <a href="{{ url_for('download_file', filename=file.path) }}" download>{{ file.name }}</a>
+                        </li>
                         {% endif %}
                         {% endfor %}
                     </ul>
-            
-
-            {% endif %}
-
+                    {% else %}
+                    <h1>Folder {{ folder.name }} has no files. You can upload now...</h1>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
 {% endblock %}

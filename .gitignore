@@ -27,7 +27,7 @@ nginx.conf
 # Uploads and database
 /app/uploads/
 Database/
-
+migrations/
 # System files
 .DS_Store
 Thumbs.db
