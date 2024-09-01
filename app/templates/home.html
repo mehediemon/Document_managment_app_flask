@@ -1,32 +1,51 @@
 {% extends "layout.html" %}
 {% block title %}Home{% endblock %}
+{% block banner %}
+<div class="container col-xl-10 col-xxl-8 px-2 py-5">
+    <div class="row align-items-center g-lg-5 py-5">
+        <div class="col-lg-7 text-center text-lg-start">
+            <h1 class="display-4 fw-bold lh-1 mb-2">
+                <img src="{{ url_for('static', filename='img/img.png') }}" alt="Brand Logo" style="height: 100px;">
+                Welcome, {{ current_user.username }}!</h1>
+            <h5 class="fs-4">You have {{ total_subfolders }} folders and subfolders, containing {{ total_files }} files.</h5>
+        </div>
+        <div class="col-md-10 mx-auto col-lg-5">
+            <form class="p-4 p-md-5 border rounded-3 bg-light" method="POST" action="">
+                {{ form.hidden_tag() }}
+                <div class="form-group input-group-lg">
+                    <img src="{{ url_for('static', filename='img/img.png') }}" alt="Brand Logo" style="height: 20px;">
+                    {{ form.name.label(class="form-label") }}
+                    {{ form.name(class="form-control") }}
+                </div>
+                <div class="form-group mt-1 input-group-lg">
+                    {{ form.submit(class="btn btn-success") }}
+                </div>
+            </form>
+        </div>
+    </div>
+    <hr class="my-3">
+</div>
+
+{% endblock %}
+
 {% block content %}
-    <h2>Welcome, {{ current_user.username }}!</h2>
-    <h4>Create a New Folder</h4>
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        <div class="form-group">
-            {{ form.name.label(class="form-label") }}
-            {{ form.name(class="form-control") }}
+<div class="container">
+<div class="row row-cols-1 row-cols-md-4 g-4" style="max-height: 900px; overflow-y: auto;">
+    {% for folder_detail in folders %}
+    <div class="col">
+        <div class="card border-success h-100">
+            <a href="{{ url_for('folder', username=current_user.username, folder_id=folder_detail.folder.id) }}">
+                
+                <div class="card-body text-success">
+                    
+                    <h3>{{ folder_detail.folder.name }}</h3>
+                    <p>Subfolders: {{ folder_detail.subfolder_count }}</p>
+
+                </div>
+            </a>
         </div>
-        <div class="form-group">
-            {{ form.submit(class="btn btn-primary") }}
-        </div>
-    </form>
-    <h4>Your Folders</h4>
-    <ul class="list-group">
-        {% for folder in folders %}
-            <li class="list-group-item">
-                <a href="{{ url_for('folder', username=current_user.username, folder_id=folder.id) }}">{{ folder.name }}</a>
-            </li>
-        {% endfor %}
-    </ul>
-    <h4>Your Files</h4>
-    <ul class="list-group">
-        {% for file in files %}
-            <li class="list-group-item">
-                <a href="{{ url_for('download_file', filename=file.path) }}">{{ file.name }}</a>
-            </li>
-        {% endfor %}
-    </ul>
+    </div>
+    {% endfor %}
+</div>
+</div>
 {% endblock %}

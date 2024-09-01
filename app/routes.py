@@ -49,10 +49,13 @@ def logout():
     logout_user()
     return redirect(url_for('home'))
 
+from sqlalchemy import func
 @app.route("/home", methods=['GET', 'POST'])
 @login_required
 def home():
     form = FolderForm()
+
+    # Handle folder creation
     if form.validate_on_submit():
         folder_path = os.path.join(current_user.root_folder, form.name.data)
         os.makedirs(folder_path, exist_ok=True)
@@ -61,10 +64,26 @@ def home():
         db.session.commit()
         return redirect(url_for('home'))
     
-    folders = Folder.query.filter_by(user_id=current_user.id, parent_id=None).all()
-    files = File.query.join(Folder).filter(Folder.user_id == current_user.id, Folder.parent_id == None).all()
-    
-    return render_template('home.html', title='Home', folders=folders, files=files, form=form)
+    # Query top-level folders
+    top_level_folders = Folder.query.filter_by(user_id=current_user.id, parent_id=None).all()
+
+    # Prepare the list of folder details
+    folders = []
+    for folder in top_level_folders:
+        subfolder_count = Folder.query.filter_by(parent_id=folder.id).count()
+        file_count = File.query.filter_by(folder_id=folder.id).count()
+        folders.append({
+            'folder': folder,
+            'subfolder_count': subfolder_count,
+            'file_count': file_count
+        })
+
+    # Calculate total subfolders and files for all levels
+    total_subfolders = Folder.query.filter(Folder.user_id == current_user.id).count()
+    total_files = File.query.join(Folder).filter(Folder.user_id == current_user.id).count()
+
+    return render_template('home.html', title='Home', folders=folders, total_subfolders=total_subfolders, total_files=total_files, form=form)
+
 
 @app.route("/<username>/folder/<int:folder_id>", methods=['GET', 'POST'])
 @login_required
