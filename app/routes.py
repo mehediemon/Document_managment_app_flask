@@ -96,30 +96,39 @@ def folder(username, folder_id):
     # Handle creating new subfolders
     form = FolderForm()
     upload_form = UploadForm()
+    
     if form.validate_on_submit():
         folder_path = os.path.join(folder.path, form.name.data)
         os.makedirs(folder_path, exist_ok=True)
         new_folder = Folder(name=form.name.data, user_id=current_user.id, path=folder_path, parent_id=folder.id)
         db.session.add(new_folder)
         db.session.commit()
+        flash('folder created!!!', 'success')
         return redirect(url_for('folder', username=username, folder_id=folder.id))
     
     if upload_form.validate_on_submit():
-          file = upload_form.file.data
-          original_filename = secure_filename(file.filename)
-          file_extension = os.path.splitext(original_filename)[1]  # Extract the original file extension
-          new_filename = f"{upload_form.new_name.data}{file_extension}"  # Combine new name with original extension
-          file_path = os.path.join(folder.path, new_filename)  # Full path where file is saved
+        file = upload_form.file.data
+        original_filename = secure_filename(file.filename)
+        file_extension = os.path.splitext(original_filename)[1]  # Extract the original file extension
+        new_filename = f"{upload_form.new_name.data}{file_extension}"  # Combine new name with original extension
+        file_path = os.path.join(folder.path, new_filename)  # Full path where file is saved
 
-          # Save file and store relative path
-          file.save(file_path)
-          relative_path = os.path.relpath(file_path, app.config['UPLOAD_FOLDER'])  # Store path relative to UPLOAD_FOLDER
-          new_file = File(name=new_filename, folder_id=folder.id, path=relative_path)
-          db.session.add(new_file)
-          db.session.commit()
-          return redirect(url_for('folder', username=username, folder_id=folder.id))
+        # Check if a file with the same name already exists
+        existing_file = File.query.filter_by(name=new_filename, folder_id=folder.id).first()
+        if existing_file:
+            flash('A file with this name already exists. Please choose a different name.', 'info')
+            print("doc name duplicate")
+            return redirect(url_for('folder', username=username, folder_id=folder.id))
 
-    
+        # Save file and store relative path
+        file.save(file_path)
+        relative_path = os.path.relpath(file_path, app.config['UPLOAD_FOLDER'])  # Store path relative to UPLOAD_FOLDER
+        new_file = File(name=new_filename, folder_id=folder.id, path=relative_path)
+        db.session.add(new_file)
+        db.session.commit()
+        flash('folder created!!!', 'success')
+        return redirect(url_for('folder', username=username, folder_id=folder.id))
+
     # Fetch subfolders and files
     subfolders = Folder.query.filter_by(parent_id=folder.id).all()
     files = File.query.filter_by(folder_id=folder.id).all()

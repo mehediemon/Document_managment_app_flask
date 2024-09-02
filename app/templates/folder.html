@@ -26,11 +26,18 @@
     </div>
 
 </div>
+<div id="progressWrapper">
+    <div id="progressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        0%
+    </div>
+</div>
 <hr class="my-1">
+
 {% endblock %}
 
 
 {% block content %}
+
 
 <div class="container-fluid ">
     <div class="row ">
@@ -39,9 +46,7 @@
         <div class="col-md-3 p-3 ">
             <div class="card p-3 mb-1 border-success rounded-0">
                 <h2>Upload File</h2>
-                <form method="POST"
-                    action="{{ url_for('folder', username=current_user.username, folder_id=folder.id) }}"
-                    enctype="multipart/form-data">
+                <form id="uploadForm" method="POST" action="{{ url_for('folder', username=current_user.username, folder_id=folder.id) }}" enctype="multipart/form-data">
                     {{ upload_form.hidden_tag() }}
                     <div class="form-group input-group-lg">
                         {{ upload_form.file.label(class="form-label") }}
@@ -52,9 +57,11 @@
                         {{ upload_form.new_name(class="form-control rounded-0") }}
                     </div>
                     <div class="form-group input-group-lg mt-2">
-                        <button type="submit" class="btn btn-success rounded-0">{{ upload_form.submit.label }}</button>
+                        <button id="uploadBtn" type="submit" class="btn btn-success rounded-0">{{ upload_form.submit.label }}</button>
                     </div>
                 </form>
+
+
             </div>
             <!-- File Upload Form -->
             <div class="card p-3 border-success rounded-0">
@@ -79,7 +86,7 @@
         <div class="col-md-2 p-3">
             <!-- Subfolders List -->
             <div class="card border-success rounded-0" style="overflow-y: auto;">
-                <div class="card-body" style="height: 470px; overflow-y: auto;">
+                <div class="card-body" style="height: 505px; overflow-y: auto;">
                     <h2>Subfolders</h2>
                     <hr class="my-1">
                     {% if subfolders %}
@@ -112,7 +119,7 @@
         <div class="col-md-7 p-3">
             <div class="card border-success rounded-0">
                 <!-- Files List -->
-                <div class="card-body" style="height: 470px; overflow-y: auto;">
+                <div class="card-body" style="height: 505px; overflow-y: auto;">
                     <h2>Current Folder : {{ folder.name }}</h2>
                     <hr class="my-1">
                     {% if files %}
@@ -160,5 +167,51 @@
     </div>
 </div>
 
+<!---->
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        var form = document.getElementById('uploadForm');
+        var formData = new FormData(form);
+        var progressBar = document.getElementById('progressBar');
+        var progressWrapper = document.getElementById('progressWrapper');
+
+        // Show progress wrapper
+        progressWrapper.style.display = 'block';
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', form.action, true);
+
+        xhr.upload.onprogress = function(event) {
+            if (event.lengthComputable) {
+                var percentComplete = (event.loaded / event.total) * 100;
+                progressBar.style.width = percentComplete + '%';
+                progressBar.setAttribute('aria-valuenow', percentComplete);
+                progressBar.textContent = Math.round(percentComplete) + '%'; // Update text content
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                // Handle successful upload
+                form.reset();
+                progressWrapper.style.display = 'none'; // Hide progress bar after upload
+                location.reload();
+            } else {
+                // Handle error
+                
+            }
+        };
+
+        xhr.onerror = function() {
+            alert('Error during upload. Please try again.');
+        };
+        
+        xhr.send(formData);
+    });
+</script>
+
+ 
 
 {% endblock %}

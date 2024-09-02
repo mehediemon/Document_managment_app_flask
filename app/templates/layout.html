@@ -46,6 +46,44 @@
             text-decoration: none;
             cursor: pointer;
         }
+
+        #progressWrapper {
+            display: none;
+            /* Hide the progress wrapper initially */
+        }
+
+        #progressBar {
+            margin-top: 1;
+            width: 0;
+            height: 20px;
+            background-color: #4caf50;
+            color: #fff;
+            text-align: center;
+            line-height: 20px;
+            /* Center text vertically */
+        }
+
+        .flash-messages {
+            position: fixed;
+            top: 90px;
+            /* Adjust as needed */
+            right: 20px;
+            /* Adjust as needed */
+            z-index: 1050;
+            /* Ensure it appears above other content */
+        }
+
+        .flash-messages .alert {
+            margin-bottom: 30px;
+            /* Space between messages */
+            opacity: 10;
+            /* Ensure visibility */
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .flash-messages .alert.fade {
+            opacity: 0;
+        }
     </style>
 </head>
 
@@ -89,15 +127,40 @@
             </div>
         </nav>
     </div>
+
     <div class="content">
         {% block banner %}{% endblock %}
 
-        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
-        
+
     </div>
 
     <!-- Bootstrap 5 JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var alerts = document.querySelectorAll('.flash-messages .alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.classList.add('fade');
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 500); // Time to wait for the fade effect
+                }, 3000); // Time before the fade starts (3 seconds)
+            });
+        });
+        </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

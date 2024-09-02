@@ -27,15 +27,6 @@
         <a class="btn btn-primary rounded-0" href="{{ url_for('login') }}">Back to login</a>
     </div>
 </form>
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-{% for category, message in messages %}
-<div class="alert alert-{{ category }}">
-    {{ message }}
-</div>
-{% endfor %}
-{% endif %}
-{% endwith %}
 </div>
 </div>
 {% endblock %}
