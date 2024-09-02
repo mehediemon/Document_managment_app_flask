@@ -1,15 +1,12 @@
 {% extends "layout.html" %}
 {% block title %}Home{% endblock %}
 {% block banner %}
-<div class="container col-xl-10 col-xxl-8 px-2 py-5">
-    <div class="row align-items-center g-lg-5 py-5">
+<div class="container px-2 py-5">
+    <div class="row align-items-center py-5">
         <div class="col-lg-7 text-center text-lg-start">
-            <h1 class="display-4 fw-bold lh-1 mb-2">
-                <img src="{{ url_for('static', filename='img/img.png') }}" alt="Brand Logo" style="height: 90px;">
-                Welcome, {{ current_user.username }}!
-            </h1>
-            <h5 class="fs-4">You have {{ total_subfolders }} folders and subfolders, containing {{ total_files }} files.
-            </h5>
+            <img src="{{ url_for('static', filename='img/img.png') }}" alt="Brand Logo" style="height: 90px;">
+            <h1 class="display-4 fw-bold lh-1 mt-2 mb-2">Welcome, {{ current_user.username }}!</h1>
+            <h5>You have {{ total_subfolders }} folders and subfolders, containing {{ total_files }} files.</h5>
         </div>
         <div class="col-md-10 mx-auto col-lg-5">
             <form class="p-3 p-md-4 border rounded-0 bg-light" method="POST" action="">
@@ -27,33 +24,82 @@
     </div>
     <hr class="my-3">
 </div>
-
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    {% if total_subfolders==0 %}
+    {% if total_subfolders == 0 %}
     <h3>Create your first folder</h3>
     {% else %}
     <div class="row row-cols-1 row-cols-md-4 g-4" style="max-height: 900px; overflow-y: auto;">
         {% for folder_detail in folders %}
         <div class="col">
             <div class="card border-success h-100 rounded-0">
-                <a href="{{ url_for('folder', username=current_user.username, folder_id=folder_detail.folder.id) }}">
-
-                    <div class="card-body text-success">
-
-                        <h3>{{ folder_detail.folder.name }}</h3>
-                        <p class=" d-flex justify-content-between align-items-center">Subfolders: 
+                <div class="card-body text-success justify-content-between align-items-center">
+                    <a href="{{ url_for('folder', username=current_user.username, folder_id=folder_detail.folder.id) }}">
+                        <h3>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-folder-fill" viewBox="0 0 16 16">
+                                <path d="M9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.825a2 2 0 0 1-1.991-1.819l-.637-7a2 2 0 0 1 .342-1.31L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3m-8.322.12q.322-.119.684-.12h5.396l-.707-.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981z"/>
+                            </svg>
+                            {{ folder_detail.folder.name }}
+                        </h3>
+                        <p class="d-flex justify-content-between align-items-center">Subfolders:
                             <span class="badge text-bg-primary rounded-pill">{{ folder_detail.subfolder_count }}</span>
                         </p>
-
-                    </div>
-                </a>
+                    </a>
+                </div>
+                <div class="card-footer text-center align-items-center">
+                    <!-- Delete button -->
+                    <button type="button" class="btn btn-danger rounded-0" data-bs-toggle="modal" data-bs-target="#deleteModal" 
+                            data-delete-url="{{ url_for('delete_folder', folder_id=folder_detail.folder.id) }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                            <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+                        </svg>
+                        Delete
+                    </button>
+                </div>
             </div>
         </div>
         {% endfor %}
     </div>
     {% endif %}
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade rounded-0" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog rounded-0">
+        <div class="modal-content rounded-0">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close rounded-0" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>There may be important files and folders!!!!!</p>
+                <p>Please type "delete" to confirm:</p>
+                <input type="text" id="deleteInput" class="form-control rounded-0" placeholder="Type 'delete'">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-0" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    <button type="submit" class="btn btn-danger rounded-0" id="confirmDeleteBtn" disabled>Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('deleteModal').addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var deleteUrl = button.getAttribute('data-delete-url');
+        var form = document.getElementById('deleteForm');
+        form.setAttribute('action', deleteUrl);
+    });
+
+    document.getElementById('deleteInput').addEventListener('input', function() {
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        confirmBtn.disabled = this.value.toLowerCase() !== 'delete';
+    });
+</script>
 {% endblock %}

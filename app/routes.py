@@ -1,4 +1,5 @@
 import os
+import shutil
 from flask import render_template, url_for, flash, redirect, request, abort, send_from_directory, current_app as app
 from app import app, db, bcrypt
 from app.forms import RegistrationForm, LoginForm, FolderForm, UploadForm
@@ -26,7 +27,7 @@ def register():
         user = User(username=form.username.data, email=form.email.data, password=hashed_password, root_folder=user_folder)
         db.session.add(user)
         db.session.commit()
-        flash(f'Your account has been created! You are now able to log in', 'success')
+        flash('Your account has been created! You are now able to log in', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
@@ -158,3 +159,51 @@ def download_file(filename):
     if not os.path.isfile(file_path):
         abort(404)  # File not found
     return send_from_directory(directory, filename)
+
+@app.route("/delete_folder/<int:folder_id>", methods=['POST'])
+@login_required
+def delete_folder(folder_id):
+    folder = Folder.query.get_or_404(folder_id)
+    if folder.user_id != current_user.id:
+        abort(403)
+
+    # Delete subfolders and files within this folder
+    for subfolder in Folder.query.filter_by(parent_id=folder.id).all():
+        delete_folder(subfolder.id)
+    
+    for file in File.query.filter_by(folder_id=folder.id).all():
+        delete_file(file.id)
+    
+    # Delete the folder from the filesystem
+    folder_path = os.path.join(app.config['UPLOAD_FOLDER'], folder.path)
+    if os.path.isdir(folder_path):
+        shutil.rmtree(folder_path)
+    
+    # Remove folder record from database
+    db.session.delete(folder)
+    db.session.commit()
+    flash('Folder has been deleted!', 'success')
+    
+    # Redirect back to the parent folder or home if no parent
+    parent_folder = Folder.query.get(folder.parent_id)
+    if parent_folder:
+        return redirect(url_for('folder', username=current_user.username, folder_id=parent_folder.id))
+    else:
+        return redirect(url_for('home'))
+
+@app.route("/delete_file/<int:file_id>", methods=['POST'])
+@login_required
+def delete_file(file_id):
+    file = File.query.get_or_404(file_id)
+    if file.folder.user_id != current_user.id:
+        abort(403)
+
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.path)
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    
+    db.session.delete(file)
+    db.session.commit()
+    flash('File has been deleted!', 'success')
+    return redirect(url_for('folder', username=current_user.username, folder_id=file.folder_id))
+
