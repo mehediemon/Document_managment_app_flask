@@ -1,0 +1,26 @@
+version: '3.4'
+
+services:
+  documentmanagmentappflask:
+    image: documentmanagmentappflask
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - /home/mehedi/RANDD/data:/app/app/uploads  # Map host directory to container directory for uploads
+    ports:
+      - 5003:5003
+    depends_on:
+      - postgresdb  # Ensure the Flask app waits for the database to be ready
+
+  postgresdb:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: myappuser
+      POSTGRES_PASSWORD: securepassword
+      POSTGRES_DB: myappdb
+    volumes:
+      - /home/mehedi/RANDD/database:/var/lib/postgresql/data  # Persist PostgreSQL data
+
+volumes:
+  postgres_data:

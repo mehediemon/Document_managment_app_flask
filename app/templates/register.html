@@ -1,27 +1,30 @@
 {% extends "layout.html" %}
 {% block title %}Register{% endblock %}
 {% block content %}
-<h2>Register</h2>
-<form method="POST" action="">
+<div class="container justify-content-center py-4" style="width: 600px;"> 
+<div class="h-100 p-5 justify-content-center bg-light border rounded-0 mt-5" >
+<h2><img src="{{ url_for('static', filename='img/img.png') }}" alt="Brand Logo" style="height: 30px;"> Register</h2>
+<form class="py-3" method="POST" action="">
     {{ form.hidden_tag() }}
-    <div class="form-group">
+    <div class="form-group input-group-lg mb-1">
         {{ form.username.label(class="form-label") }}
-        {{ form.username(class="form-control") }}
+        {{ form.username(class="form-control rounded-0") }}
     </div>
-    <div class="form-group">
+    <div class="form-group input-group-lg mb-1">
         {{ form.email.label(class="form-label") }}
-        {{ form.email(class="form-control") }}
+        {{ form.email(class="form-control rounded-0") }}
     </div>
-    <div class="form-group">
+    <div class="form-group input-group-lg mb-1">
         {{ form.password.label(class="form-label") }}
-        {{ form.password(class="form-control") }}
+        {{ form.password(class="form-control rounded-0") }}
     </div>
-    <div class="form-group">
+    <div class="form-group input-group-lg mb-2">
         {{ form.confirm_password.label(class="form-label") }}
-        {{ form.confirm_password(class="form-control") }}
+        {{ form.confirm_password(class="form-control rounded-0") }}
     </div>
-    <div class="form-group">
-        {{ form.submit(class="btn btn-primary") }}
+    <div class="form-group input-group-lg py-1">
+        {{ form.submit(class="btn btn-primary rounded-0") }}
+        <a class="btn btn-primary rounded-0" href="{{ url_for('login') }}">Back to login</a>
     </div>
 </form>
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -33,4 +36,6 @@
 {% endfor %}
 {% endif %}
 {% endwith %}
+</div>
+</div>
 {% endblock %}
