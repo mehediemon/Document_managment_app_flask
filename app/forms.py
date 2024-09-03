@@ -35,3 +35,5 @@ class UploadForm(FlaskForm):
     file = FileField('Upload File', validators=[FileAllowed(['jpg', 'png', 'pdf', 'docx', 'txt', 'mkv', 'mp4' ]), DataRequired()])
     new_name = StringField('Rename File', validators=[DataRequired(), Length(max=100)])
     submit = SubmitField('Upload')
+
+    

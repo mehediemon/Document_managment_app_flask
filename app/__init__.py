@@ -13,6 +13,7 @@ app.config.from_object('config.Config')
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://myappuser:securepassword@127.0.0.1:5432/myappdb'
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
 
+
 # Define the path for the SQLite database
 # app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(database_folder, "site.db")}'
 

@@ -1,6 +1,7 @@
 import os
 import shutil
-from flask import render_template, url_for, flash, redirect, request, abort, send_from_directory, current_app as app
+from flask import jsonify, render_template, url_for, flash, redirect, request, abort, send_from_directory, current_app as app
+from wtforms import ValidationError
 from app import app, db, bcrypt
 from app.forms import RegistrationForm, LoginForm, FolderForm, UploadForm
 from app.models import User, Folder, File
@@ -51,6 +52,7 @@ def logout():
     return redirect(url_for('home'))
 
 from sqlalchemy import func
+
 @app.route("/home", methods=['GET', 'POST'])
 @login_required
 def home():
@@ -58,11 +60,20 @@ def home():
 
     # Handle folder creation
     if form.validate_on_submit():
-        folder_path = os.path.join(current_user.root_folder, form.name.data)
+        folder_name = form.name.data.strip()  # Remove leading and trailing spaces from the folder name
+        folder_path = os.path.join(current_user.root_folder, folder_name)
+
+        # Check if a folder with the same name already exists at the top level
+        duplicate_folder = Folder.query.filter_by(name=folder_name, user_id=current_user.id, parent_id=None).first()
+        if duplicate_folder:
+            flash('A folder with this name already exists. Please choose a different name.', 'info')
+            return redirect(url_for('home'))
+
         os.makedirs(folder_path, exist_ok=True)
-        folder = Folder(name=form.name.data, user_id=current_user.id, path=folder_path, parent_id=None)
+        folder = Folder(name=folder_name, user_id=current_user.id, path=folder_path, parent_id=None)
         db.session.add(folder)
         db.session.commit()
+        flash('Folder created successfully!', 'success')
         return redirect(url_for('home'))
     
     # Query top-level folders
@@ -98,37 +109,45 @@ def folder(username, folder_id):
     upload_form = UploadForm()
     
     if form.validate_on_submit():
-        folder_path = os.path.join(folder.path, form.name.data)
+        folder_name = form.name.data.strip()  # Remove leading and trailing spaces from folder name
+        folder_path = os.path.join(folder.path, folder_name)
+
+        # Check if a folder with the same name already exists within the current folder
+        duplicate_folder = Folder.query.filter_by(name=folder_name, parent_id=folder.id).first()
+        if duplicate_folder:
+            flash('A folder with this name already exists. Please choose a different name.', 'info')
+            return redirect(url_for('folder', username=username, folder_id=folder.id))
+        
         os.makedirs(folder_path, exist_ok=True)
-        new_folder = Folder(name=form.name.data, user_id=current_user.id, path=folder_path, parent_id=folder.id)
+        new_folder = Folder(name=folder_name, user_id=current_user.id, path=folder_path, parent_id=folder.id)
         db.session.add(new_folder)
         db.session.commit()
-        flash('folder created!!!', 'success')
+        flash('Folder created successfully!', 'success')
         return redirect(url_for('folder', username=username, folder_id=folder.id))
-    
     if upload_form.validate_on_submit():
-        file = upload_form.file.data
-        original_filename = secure_filename(file.filename)
-        file_extension = os.path.splitext(original_filename)[1]  # Extract the original file extension
-        new_filename = f"{upload_form.new_name.data}{file_extension}"  # Combine new name with original extension
-        file_path = os.path.join(folder.path, new_filename)  # Full path where file is saved
-
-        # Check if a file with the same name already exists
-        existing_file = File.query.filter_by(name=new_filename, folder_id=folder.id).first()
-        if existing_file:
-            flash('A file with this name already exists. Please choose a different name.', 'info')
-            print("doc name duplicate")
-            return redirect(url_for('folder', username=username, folder_id=folder.id))
-
-        # Save file and store relative path
-        file.save(file_path)
-        relative_path = os.path.relpath(file_path, app.config['UPLOAD_FOLDER'])  # Store path relative to UPLOAD_FOLDER
-        new_file = File(name=new_filename, folder_id=folder.id, path=relative_path)
-        db.session.add(new_file)
-        db.session.commit()
-        flash('folder created!!!', 'success')
-        return redirect(url_for('folder', username=username, folder_id=folder.id))
-
+            file = upload_form.file.data
+            original_filename = secure_filename(file.filename)
+            file_extension = os.path.splitext(original_filename)[1]
+            new_filename = f"{upload_form.new_name.data.strip()}{file_extension}"
+            file_path = os.path.join(folder.path, new_filename)
+    
+            existing_file = File.query.filter_by(name=new_filename, folder_id=folder.id).first()
+            if existing_file:
+                flash('A file with this name already exists. Please choose a different name.', 'info')
+                return jsonify({'flash': {'category': 'info', 'message': 'A file with this name already exists. Please choose a different name.'}})
+    
+            file.save(file_path)
+            relative_path = os.path.relpath(file_path, app.config['UPLOAD_FOLDER'])
+            new_file = File(name=new_filename, folder_id=folder.id, path=relative_path)
+            db.session.add(new_file)
+            db.session.commit()
+            flash('File uploaded successfully!', 'success')
+            return jsonify({'redirect': url_for('folder', username=username, folder_id=folder.id)})
+    
+    if upload_form.file.errors:
+            flash(f"Upload failed: {upload_form.file.errors[0]}", 'danger')
+            return jsonify({'flash': {'category': 'danger', 'message': 'Upload failed: ' + upload_form.file.errors[0]}})
+    
     # Fetch subfolders and files
     subfolders = Folder.query.filter_by(parent_id=folder.id).all()
     files = File.query.filter_by(folder_id=folder.id).all()
